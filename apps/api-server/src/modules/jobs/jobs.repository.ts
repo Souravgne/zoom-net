@@ -88,6 +88,30 @@ export class JobsRepository {
    * @param dbClient The database client for the transaction.
    * @returns The updated job record.
    */
+  async findAndMarkAsRunning(
+    workerRunId: string,
+    dbClient: DbClient,
+  ): Promise<JobDbRecord | null> {
+    // This query finds the oldest pending job, locks the row so no other worker can select it,
+    // and immediately updates it to 'RUNNING' with the given worker run ID.
+    // It's the core of a database-backed job queue.
+    const result = await dbClient.query(
+      `WITH selected_job AS (
+        SELECT id FROM automation_jobs
+        WHERE status = 'PENDING'
+        ORDER BY created_at ASC
+        LIMIT 1
+        FOR UPDATE SKIP LOCKED
+      )
+      UPDATE automation_jobs
+      SET status = 'RUNNING', settlement_run_id = $1
+      WHERE id = (SELECT id FROM selected_job)
+      RETURNING *`,
+      [workerRunId],
+    );
+    return result.rows[0] || null;
+  }
+
   async finalizeSettlement(
     jobId: string,
     status: "COMPLETED" | "FAILED",

@@ -1,0 +1,8 @@
+{
+  "name": "@zoom-net/monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}

@@ -8,7 +8,7 @@
     "dev": "tsc -w"
   },
   "dependencies": {
-    "@shared-types": "workspace:*"
+    "@zoom-net/shared-types": "1.0.0"
   },
   "devDependencies": {
     "typescript": "^5.0.4"

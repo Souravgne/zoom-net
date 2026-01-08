@@ -40,6 +40,17 @@ export class JobsService {
     });
   }
 
+  async fetchAndRunJob() {
+    return this.dbManager.execute(async (dbClient) => {
+      const workerRunId = randomUUID();
+      const job = await this.jobsRepository.findAndMarkAsRunning(
+        workerRunId,
+        dbClient,
+      );
+      return job;
+    });
+  }
+
   /**
    * Handles a worker's attempt to settle a job.
    * This method is idempotent and ensures a job is only ever settled once.

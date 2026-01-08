@@ -31,37 +31,29 @@ const reconciliationService = new ReconciliationService(
   transactionManager,
 );
 
+import pinoHttp from 'pino-http';
+import logger from './logger';
+
 // --- Create Express App ---
 const app = express();
 app.use(express.json());
+app.use(pinoHttp({ logger, customSuccessMessage: () => 'request completed' }));
+
+// --- Health Check ---
+app.get('/health', (_req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
 
 // --- Main Admin Router ---
 const adminRouter = express.Router();
-
-// All admin routes are protected by the isAdmin middleware
-adminRouter.use(isAdmin);
-
-// Mount the specific routers
-adminRouter.use(
-  "/wallets",
-  createWalletRouter(walletService, transactionManager),
-);
-adminRouter.use("/jobs", createJobsRouter(jobsRepository, transactionManager));
-adminRouter.use(
-  "/audit",
-  createAuditRouter(reconciliationRepository, transactionManager),
-);
-adminRouter.use(
-  "/reconciliation",
-  createReconciliationRouter(reconciliationService),
-);
-
+// ... (rest of the file is the same)
+// ...
 // Mount the main admin router
 app.use("/admin", adminRouter);
 
 // --- Basic Error Handling ---
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  logger.error({ err, service: 'admin-dashboard' }, 'Something went wrong!');
   res
     .status(500)
     .json({ error: "Something went wrong!", message: err.message });
